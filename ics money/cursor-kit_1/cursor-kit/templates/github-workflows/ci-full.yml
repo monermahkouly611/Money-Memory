@@ -1,0 +1,50 @@
+# Full checks: PRs into develop is light; PRs promoting to staging/main, and pushes to develop/staging/main run FULL
+name: ci-full
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [develop, staging, main]
+concurrency: { group: ci-full-${{ github.ref }}, cancel-in-progress: true }
+permissions: { contents: read, security-events: write }
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run lint && npm run typecheck && npm test -- --coverage && npm run build
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres: { image: "postgres:16", env: { POSTGRES_PASSWORD: test }, ports: ["5432:5432"] }
+      redis: { image: "redis:7", ports: ["6379:6379"] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci && npx playwright install --with-deps
+      - run: npm run db:migrate && npm run test:e2e
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: { languages: javascript-typescript }
+      - uses: github/codeql-action/analyze@v3
+      - uses: aquasecurity/trivy-action@0.28.0
+        with: { scan-type: fs, severity: "CRITICAL,HIGH", exit-code: "1" }
+  performance-a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci && npm run build
+      - run: npm run test:a11y && npm run test:lighthouse && npm run test:load

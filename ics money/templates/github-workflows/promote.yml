@@ -1,0 +1,16 @@
+# Opens promotion PRs in order: develop -> staging, staging -> main. Never skips a stage.
+name: promote
+on:
+  workflow_dispatch:
+    inputs:
+      target: { description: "staging or main", required: true, type: choice, options: [staging, main] }
+permissions: { contents: write, pull-requests: write }
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}", TARGET: "${{ inputs.target }}" }
+        run: |
+          if [ "$TARGET" = "staging" ]; then SRC=develop; else SRC=staging; fi
+          gh pr create --base "$TARGET" --head "$SRC" --title "release: promote $SRC to $TARGET" --body "Promotion PR. Merge only after all checks are green."

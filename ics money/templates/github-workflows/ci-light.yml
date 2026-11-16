@@ -1,0 +1,23 @@
+# Light checks: PRs into develop (from feature/fix/chore branches)
+name: ci-light
+on:
+  pull_request:
+    branches: [develop]
+concurrency: { group: ci-light-${{ github.ref }}, cancel-in-progress: true }
+permissions: { contents: read }
+jobs:
+  lint:       { runs-on: ubuntu-latest, timeout-minutes: 10, steps: [ {uses: actions/checkout@v4}, {uses: actions/setup-node@v4, with: {node-version-file: .nvmrc, cache: npm}}, {run: npm ci}, {run: npm run lint} ] }
+  typecheck:  { runs-on: ubuntu-latest, timeout-minutes: 10, steps: [ {uses: actions/checkout@v4}, {uses: actions/setup-node@v4, with: {node-version-file: .nvmrc, cache: npm}}, {run: npm ci}, {run: npm run typecheck} ] }
+  unit:       { runs-on: ubuntu-latest, timeout-minutes: 15, steps: [ {uses: actions/checkout@v4}, {uses: actions/setup-node@v4, with: {node-version-file: .nvmrc, cache: npm}}, {run: npm ci}, {run: npm test -- --coverage} ] }
+  build:      { runs-on: ubuntu-latest, timeout-minutes: 15, steps: [ {uses: actions/checkout@v4}, {uses: actions/setup-node@v4, with: {node-version-file: .nvmrc, cache: npm}}, {run: npm ci}, {run: npm run build} ] }
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci && npm audit --omit=dev --audit-level=high
