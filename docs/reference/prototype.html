@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money Memory: app prototype</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff}
+button,input,select,textarea{font-family:inherit;font-size:14px;color:#111}
+.wrap{display:flex;gap:32px;justify-content:center;align-items:flex-start;flex-wrap:wrap;padding:24px}
+.phone{width:390px;height:800px;border:3px solid #111;border-radius:30px;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#fff}
+.screen{flex:1;overflow-y:auto;padding:0 0 12px}
+.hd{padding:16px 16px 8px}
+.hd h1{margin:0;font-size:22px}
+.hd p{margin:2px 0 0;font-size:12px;color:#555}
+.pad{padding:8px 16px;display:flex;flex-direction:column;gap:10px}
+.card{border:2px solid #111;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.card.dark{background:#111;color:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.06em;margin-top:4px}
+.mut{font-size:12px;color:#555}
+.card.dark .mut{color:#ddd}
+.btn{min-height:44px;padding:0 14px;border:2px solid #111;border-radius:10px;background:#fff;font-weight:700;cursor:pointer}
+.btn.p{background:#111;color:#fff}
+.btn.f{flex:1}
+.btn.s{min-height:36px}
+.tag{font-size:11px;font-weight:700;border:1.5px solid #111;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.tag.k{background:#111;color:#fff}
+.seg{display:flex;border:2px solid #111;border-radius:10px;overflow:hidden}
+.seg button{flex:1;min-height:38px;border:0;border-left:2px solid #111;background:#fff;font-weight:700;font-size:12px;cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button.on{background:#111;color:#fff}
+label.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700}
+.fld input,.fld select,.fld textarea{min-height:44px;border:2px solid #111;border-radius:10px;padding:0 10px;background:#fff;font-weight:400}
+.fld textarea{padding:8px 10px;min-height:70px}
+.tabs{display:flex;border-top:3px solid #111}
+.tabs button{flex:1;min-height:58px;border:0;border-left:2px solid #111;background:#fff;font-weight:700;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabs button:first-child{border-left:0}
+.tabs button.on{background:#111;color:#fff}
+.tabs svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bub{max-width:84%;padding:9px 11px;border:2px solid #111;border-radius:12px;font-size:14px;line-height:1.4}
+.bub.u{align-self:flex-end;background:#111;color:#fff}
+.bub.a{align-self:flex-start}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1.5px solid #111;border-radius:999px;background:#fff;padding:6px 10px;font-size:12px;cursor:pointer}
+.chat-in{display:flex;gap:8px;padding:8px 12px;border-top:2px solid #111}
+.chat-in input{flex:1;min-height:44px;border:2px solid #111;border-radius:22px;padding:0 14px}
+.toast{position:absolute;left:16px;right:16px;bottom:70px;background:#111;color:#fff;padding:10px 12px;border-radius:10px;font-size:13px;z-index:5}
+.ov{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;z-index:9}
+.sheet{background:#fff;border-top:3px solid #111;width:100%;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:90%;overflow:auto;border-radius:18px 18px 0 0}
+.sheet h2{margin:0;font-size:18px}
+pre{margin:0;font-size:11px;background:#eee;border:1.5px solid #111;padding:8px;max-height:200px;overflow:auto;white-space:pre-wrap}
+.ph{height:90px;border:2px dashed #111;display:flex;align-items:center;justify-content:center;font-size:12px;background:#eee;border-radius:10px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.chk input{width:22px;height:22px;margin:0;flex:none}
+.guide{width:340px;border:2px solid #111;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;position:sticky;top:24px}
+.guide h2{margin:0;font-size:16px}
+.guide .k{font-size:11px;font-weight:700;letter-spacing:.06em}
+.steps{display:flex;flex-direction:column;gap:6px;padding:0;margin:0;list-style:none}
+.steps li{display:flex;gap:8px;align-items:center;border:2px solid #111;border-radius:8px;padding:6px 8px;font-size:13px;color:#555;border-style:dashed}
+.steps li.done{color:#111;border-style:solid}
+.steps li.now{background:#111;color:#fff;border-style:solid}
+.steps b{width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.strike{text-decoration:line-through;color:#777}
+@media (max-width:760px){.phone{width:100%;max-width:390px}.guide{width:100%;max-width:390px;position:static}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone" id="phone"></div>
+  <aside class="guide" id="guide" aria-live="polite"></aside>
+</div>
+<script>
+(function(){
+"use strict";
+var TODAY=new Date();TODAY.setHours(0,0,0,0);
+function addDays(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x}
+function addMonths(d,n){var x=new Date(d.getFullYear(),d.getMonth()+n,1);var last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate();x.setDate(Math.min(d.getDate(),last));return x}
+function nextDue(d,rep){return rep==="weekly"?addDays(d,7):rep==="monthly"?addMonths(d,1):rep==="yearly"?addMonths(d,12):null}
+function fd(d){return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
+function fdl(d){return d.toLocaleDateString("en-GB",{day:"numeric",month:"long"})}
+function iso(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(dd<10?"0":"")+dd}
+function diff(d){return Math.round((d-TODAY)/86400000)}
+function money(n){return "₪"+Number(n).toLocaleString("en-US",{maximumFractionDigits:2})}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var uid=100;function nid(){return ++uid}
+
+var I18N={
+ en:{dir:"ltr",tabs:["Home","Plan","Add","Ask AI","Account"],t:["Money Memory","Plan","Add entry","Ask AI","Account and plan"]},
+ he:{dir:"rtl",tabs:["בית","תכנון","הוספה","שאל AI","חשבון"],t:["Money Memory","תכנון","הוספת רשומה","שאל AI","חשבון ותוכנית"]},
+ ar:{dir:"rtl",tabs:["الرئيسية","الخطة","إضافة","اسأل الذكاء","الحساب"],t:["Money Memory","الخطة","إضافة إدخال","اسأل الذكاء","الحساب والخطة"]}
+};
+var SCREENS=["home","plan","add","ai","account"];
+var GUIDE={
+ home:{goal:"I want to see where my money goes and what to do about it today.",why:"Like a car dashboard with a to-do list: the gauges show where you stand, the cards tell you the next move.",steps:["See spent versus budget","Tap an action card (pay, move money, review)","Watch the gauge and the card update"]},
+ plan:{goal:"I want to decide how much to spend and how much to save.",why:"Like filling jars: each jar is a limit, and when one is nearly full you slow down.",steps:["Set a limit for each category","Move money toward your savings goal","See progress on Home and in Ask AI"]},
+ add:{goal:"I want to record an obligation in a few seconds.",why:"Like dropping a note into a tidy drawer instead of carrying it in your pocket.",steps:["Choose what you are recording","Fill name, amount, date, repeat","Save and see it on Home"]},
+ scan:{goal:"I want to avoid typing the details myself.",why:"Like a clerk who reads the receipt for you, and you only sign.",steps:["Pick a receipt or paste an SMS","Check what was read","Confirm and save"]},
+ ai:{goal:"I want to understand where my money went.",why:"Like asking a friend who kept your notebook: they answer only from the notebook.",steps:["Ask a question","Read the answer with its period","Need a person? Use Talk to a person"]},
+ subs:{goal:"I want to see what quietly drains me every month.",why:"Like dripping taps: each is small, but together they empty the tank.",steps:["See the monthly total","Spot one you do not need","Tap Mark cancelled and watch the total drop"]},
+ account:{goal:"I want to stay in control of my plan and my data.",why:"Like the keys to your own house: you decide who comes in and when to lock up.",steps:["Choose language, plan and consents","Confirm any change","Export or delete your data any time"]}
+};
+
+var S;
+function seed(){
+ var d=TODAY;
+ var lm=new Date(d.getFullYear(),d.getMonth()-1,1);
+ function ex(day,m,a,c,mon){var dd=(mon.getMonth()===d.getMonth()&&mon.getFullYear()===d.getFullYear())?Math.min(day,d.getDate()):day;return {id:nid(),date:new Date(mon.getFullYear(),mon.getMonth(),dd),merchant:m,amount:a,cat:c}}
+ var tm=new Date(d.getFullYear(),d.getMonth(),1);
+ S={
+  screen:"home",step:1,lang:"en",toast:null,modal:null,addType:"bill",form:{},
+  scan:{stage:"pick",data:null,error:false,sms:"Card ending 1234 approved ₪87.50 at CAFE NOVA on "+d.getDate()+"/"+(d.getMonth()+1)},
+  plan:{tier:"free",cycle:"monthly",endsOn:null,usage:2,limit:20},marketing:false,deleted:false,
+  income:12000,
+  budgets:{"Groceries":1500,"Transport":500,"Eating out":600,"Health":300,"Fun":300,"Other":400},
+  goal:{name:"Emergency fund",target:10000,saved:2400,by:addMonths(TODAY,9),moved:0},
+  items:[
+   {id:nid(),kind:"bill",name:"Electricity",amount:412,due:addDays(d,-3),repeat:"monthly",paid:false,snooze:null},
+   {id:nid(),kind:"bill",name:"Rent",amount:4500,due:addDays(d,2),repeat:"monthly",paid:false,snooze:null},
+   {id:nid(),kind:"bill",name:"Internet",amount:99,due:addDays(d,5),repeat:"monthly",paid:false,snooze:null},
+   {id:nid(),kind:"owe",name:"Credit card instalment",amount:1200,due:addDays(d,9),repeat:"none",paid:false,snooze:null},
+   {id:nid(),kind:"owed",name:"Dan",amount:300,due:addDays(d,-5),repeat:"none",paid:false,snooze:null},
+   {id:nid(),kind:"sub",name:"Streaming",amount:45,due:addDays(d,4),repeat:"monthly",cancelled:false},
+   {id:nid(),kind:"sub",name:"Music",amount:20,due:addDays(d,11),repeat:"monthly",cancelled:false},
+   {id:nid(),kind:"sub",name:"Cloud storage",amount:10,due:addDays(d,19),repeat:"monthly",cancelled:false}
+  ],
+  expenses:[
+   ex(3,"Supermarket",520,"Groceries",lm),ex(10,"Supermarket",430,"Groceries",lm),ex(21,"Supermarket",290,"Groceries",lm),
+   ex(5,"Fuel",180,"Transport",lm),ex(18,"Bus card",130,"Transport",lm),
+   ex(7,"Restaurant",260,"Eating out",lm),ex(24,"Cafe",220,"Eating out",lm),
+   ex(12,"Pharmacy",220,"Health",lm),ex(26,"Cinema",150,"Fun",lm),
+   ex(1,"Supermarket",520,"Groceries",tm),ex(5,"Supermarket",430,"Groceries",tm),ex(9,"Supermarket",325,"Groceries",tm),ex(3,"Fuel",180,"Transport",tm),ex(4,"Restaurant",260,"Eating out",tm),ex(8,"Cafe",120,"Eating out",tm),ex(6,"Pharmacy",90,"Health",tm)
+  ],
+  chat:[{r:"a",t:"Hi! I answer only from your recorded data, and I cannot change anything. Try a question below."}]
+ };
+}
+seed();
+
+function toast(m){S.toast=m;render();clearTimeout(toast.t);toast.t=setTimeout(function(){S.toast=null;render()},2800)}
+function go(sc){S.screen=sc;S.step=1;S.modal=null;render()}
+function active(k){return S.items.filter(function(i){return i.kind===k&&!i.paid&&!i.cancelled})}
+function curMonth(offset){var m=new Date(TODAY.getFullYear(),TODAY.getMonth()+offset,1);return m}
+function inMonth(e,m){return e.date.getFullYear()===m.getFullYear()&&e.date.getMonth()===m.getMonth()}
+
+/* ---------- views ---------- */
+function billCard(i){
+ var over=diff(i.due)<0;
+ var sn=i.snooze&&diff(i.snooze)>0;
+ var sub=over?"Was due "+fd(i.due)+" ("+(-diff(i.due))+" days ago)":"Due "+fd(i.due)+(diff(i.due)===0?" (today)":"");
+ var rep=i.repeat!=="none"?" · repeats "+i.repeat:"";
+ var btns=i.kind==="owed"?'<button class="btn f s" data-a="paid" data-id="'+i.id+'">Mark received</button>'
+  :'<button class="btn p f s" data-a="paid" data-id="'+i.id+'">Paid</button>'+(sn?'':'<button class="btn f s" data-a="snoozeOpen" data-id="'+i.id+'">Snooze</button>');
+ return '<div class="card"><div class="row"><b>'+(i.kind==="owed"?"Owed to me: ":"")+esc(i.name)+'</b><b>'+money(i.amount)+'</b></div>'+
+  '<div class="row"><span class="mut">'+sub+rep+'</span>'+(over?'<span class="tag k">Overdue</span>':'')+'</div>'+
+  (sn?'<div class="mut">Reminder snoozed until '+fd(i.snooze)+'</div>':'')+'<div class="row">'+btns+'</div></div>';
+}
+function bar(p,over){p=Math.max(0,Math.min(100,p));return '<div style="height:12px;border:2px solid #111;border-radius:7px;overflow:hidden;background:#fff"><div style="height:100%;width:'+p+'%;background:'+(over?'repeating-linear-gradient(45deg,#111,#111 4px,#fff 4px,#fff 8px)':'#111')+'"></div></div>'}
+function spentBy(m){var by={};S.expenses.forEach(function(e){if(inMonth(e,m))by[e.cat]=(by[e.cat]||0)+e.amount});return by}
+function totalBudget(){return Object.keys(S.budgets).reduce(function(a,k){return a+S.budgets[k]},0)}
+function goalNeed(){var g=S.goal,months=Math.max(1,Math.round((g.by-TODAY)/2629800000)),rem=Math.max(0,g.target-g.saved);return {months:months,rem:rem,per:Math.ceil(rem/months/50)*50}}
+function actions(){
+ var out=[],ids=function(i){return 'data-id="'+i.id+'"'};
+ var bills=active("bill").concat(active("owe")).filter(function(i){return diff(i.due)<=2}).sort(function(a,b){return a.due-b.due});
+ bills.forEach(function(i){var d=diff(i.due),sn=i.snooze&&diff(i.snooze)>0;
+  out.push({t:esc(i.name)+" "+money(i.amount),s:d<0?"Overdue by "+(-d)+" days":d===0?"Due today":"Due in "+d+" days",tag:d<0?"Overdue":"Payment",b:'<button class="btn p f s" data-a="paid" '+ids(i)+'>Paid</button>'+(sn?'':'<button class="btn f s" data-a="snoozeOpen" '+ids(i)+'>Snooze</button>')})});
+ active("owed").filter(function(i){return diff(i.due)<0}).forEach(function(i){out.push({t:esc(i.name)+" owes you "+money(i.amount),s:(-diff(i.due))+" days late",tag:"Owed to you",b:'<button class="btn p f s" data-a="paid" '+ids(i)+'>Mark received</button>'})});
+ var by=spentBy(curMonth(0));
+ Object.keys(S.budgets).forEach(function(c){var b=S.budgets[c],sp=by[c]||0;if(b>0&&sp/b>=0.8)out.push({t:c+": "+Math.round(sp/b*100)+"% of budget used",s:money(sp)+" of "+money(b)+(sp>b?" (over budget)":""),tag:sp>b?"Over":"Budget",b:'<button class="btn p f s" data-a="go" data-v="plan">Review budget</button>'})});
+ var g=S.goal,n=goalNeed();
+ if(n.rem>0&&g.moved<n.per)out.push({t:"Move "+money(n.per)+" to "+esc(g.name),s:"To reach "+money(g.target)+" by "+fdl(g.by)+" you need about "+money(n.per)+" a month.",tag:"Saving",b:'<button class="btn p f s" data-a="goalMove" data-n="'+n.per+'">Move '+money(n.per)+'</button><button class="btn f s" data-a="go" data-v="plan">Edit goal</button>'});
+ var subs=S.items.filter(function(i){return i.kind==="sub"&&!i.cancelled}),st=subs.reduce(function(a,i){return a+i.amount},0);
+ if(subs.length)out.push({t:"Your subscriptions cost "+money(st)+" a month",s:money(st*12)+" a year. Tip (general information): check which you still use.",tag:"Tip",b:'<button class="btn f s" data-a="go" data-v="subs">Review subscriptions</button>'});
+ return out.slice(0,6);
+}
+function home(){
+ var by=spentBy(curMonth(0)),spent=Object.keys(by).reduce(function(a,k){return a+by[k]},0),tb=totalBudget(),left=tb-spent;
+ var h='<div class="pad"><div class="card dark"><span class="mut">Spent this month</span><b style="font-size:28px">'+money(spent)+'</b>'+
+  '<div style="background:#fff;border-radius:7px">'+bar(tb?spent/tb*100:0,spent>tb)+'</div>'+
+  '<span class="mut">'+(left>=0?money(left)+" left of your "+money(tb)+" budget":money(-left)+" over your "+money(tb)+" budget")+' · income '+money(S.income)+'</span></div>';
+ var act=actions();
+ h+='<div class="lbl">WHAT NEEDS YOU NOW</div>';
+ if(!act.length)h+='<div class="card"><b>You are all caught up.</b><span class="mut">Nothing needs action today.</span></div>';
+ h+=act.map(function(a){return '<div class="card"><div class="row"><b>'+a.t+'</b><span class="tag">'+a.tag+'</span></div><span class="mut">'+a.s+'</span><div class="row">'+a.b+'</div></div>'}).join("");
+ h+='<div class="lbl">SPENDING BY CATEGORY</div><div class="card">'+Object.keys(S.budgets).map(function(c){var b=S.budgets[c],sp=by[c]||0;return '<div style="display:flex;flex-direction:column;gap:4px"><div class="row"><span>'+c+'</span><span class="mut">'+money(sp)+' of '+money(b)+'</span></div>'+bar(b?sp/b*100:0,sp>b)+'</div>'}).join("")+'</div>';
+ var items=active("bill").concat(active("owe"),active("owed")).filter(function(i){return diff(i.due)>2||(i.kind==="owed"&&diff(i.due)>=0)}).sort(function(a,b){return a.due-b.due});
+ if(items.length)h+='<div class="lbl">UPCOMING PAYMENTS</div>'+items.map(billCard).join("");
+ return h+'</div>';
+}
+function plan(){
+ var by=spentBy(curMonth(0)),g=S.goal,n=goalNeed(),tb=totalBudget();
+ var subs=S.items.filter(function(i){return i.kind==="sub"&&!i.cancelled}),st=subs.reduce(function(a,i){return a+i.amount},0);
+ var h='<div class="pad"><div class="lbl">MONTHLY BUDGET</div><div class="card">'+Object.keys(S.budgets).map(function(c){var b=S.budgets[c],sp=by[c]||0;
+  return '<div style="display:flex;flex-direction:column;gap:4px"><div class="row"><b>'+c+'</b><span class="row" style="gap:6px"><button class="btn s" style="min-height:36px;width:36px;padding:0" aria-label="Lower '+c+' budget by 50" data-a="budget" data-cat="'+c+'" data-d="-50">−</button><span style="min-width:62px;text-align:center;font-weight:700">'+money(b)+'</span><button class="btn s" style="min-height:36px;width:36px;padding:0" aria-label="Raise '+c+' budget by 50" data-a="budget" data-cat="'+c+'" data-d="50">+</button></span></div>'+bar(b?sp/b*100:0,sp>b)+'<span class="mut">'+money(sp)+' spent'+(sp>b?" (over budget)":b?" · "+money(b-sp)+" left":"")+'</span></div>'}).join("")+
+  '<div class="row" style="border-top:2px solid #111;padding-top:8px"><b>Total budget</b><b>'+money(tb)+'</b></div></div>'+
+  '<div class="lbl">SAVINGS GOAL</div><div class="card"><div class="row"><b>'+esc(g.name)+'</b><span class="tag">'+Math.round(g.saved/g.target*100)+'%</span></div>'+bar(g.saved/g.target*100)+
+  '<span class="mut">'+money(g.saved)+' of '+money(g.target)+' by '+fdl(g.by)+'</span><span class="mut">'+(n.rem>0?'You need about '+money(n.per)+' a month to get there ('+n.months+' months left).':'Goal reached.')+'</span>'+
+  '<div class="row"><button class="btn p f s" data-a="goalMove" data-n="100">Move ₪100</button><button class="btn f s" data-a="goalMove" data-n="500">Move ₪500</button></div></div>'+
+  '<div class="lbl">RECURRING</div><div class="card"><div class="row"><b>Subscriptions</b><b>'+money(st)+' / month</b></div><button class="btn s" data-a="go" data-v="subs">Review subscriptions</button></div></div>';
+ return h;
+}
+var TYPES=[["bill","Bill"],["expense","Expense"],["income","Income"],["owe","I owe"],["owed","Owed to me"],["sub","Subscription"]];
+function add(){
+ var f=S.form,t=S.addType;
+ var seg=function(a){return '<div class="seg">'+a.map(function(x){return '<button data-a="type" data-v="'+x[0]+'" class="'+(t===x[0]?"on":"")+'">'+x[1]+'</button>'}).join("")+'</div>'};
+ var needsDue=!(t==="expense"||t==="income");
+ var cats=Object.keys(S.budgets);
+ var h='<div class="pad">'+seg(TYPES.slice(0,3))+seg(TYPES.slice(3))+
+ '<div class="row"><button class="btn p f" data-a="scanOpen">Scan receipt</button><button class="btn f" data-a="scanOpen" data-v="sms">Paste bank SMS</button></div>'+
+ '<div class="mut" style="text-align:center">or enter by hand</div>'+
+ '<label class="fld">Name<input data-f="name" value="'+esc(f.name||"")+'" placeholder="e.g. Water bill"></label>'+
+ '<label class="fld">Amount (₪)<input data-f="amount" inputmode="decimal" value="'+esc(f.amount||"")+'" placeholder="0.00"></label>'+
+ '<label class="fld">'+(needsDue?"Due date":"Date")+'<input type="date" data-f="date" value="'+esc(f.date||iso(addDays(TODAY,3)))+'"></label>';
+ if(t==="expense")h+='<label class="fld">Category<select data-f="cat">'+cats.map(function(c){return '<option'+((f.cat||"Other")===c?" selected":"")+'>'+c+'</option>'}).join("")+'</select></label>';
+ if(needsDue&&t!=="expense")h+='<label class="fld">Repeat<select data-f="repeat">'+["none","weekly","monthly","yearly"].map(function(r){return '<option value="'+r+'"'+((f.repeat||(t==="sub"?"monthly":"none"))===r?" selected":"")+'>'+r+'</option>'}).join("")+'</select></label>'+
+ '<label class="fld">Remind me<select data-f="remind"><option>2 days before, 09:00</option><option>1 day before, 09:00</option><option>On the day, 09:00</option></select></label>';
+ h+='<button class="btn p" data-a="save">Save</button></div>';
+ return h;
+}
+function scan(){
+ var sc=S.scan,h='<div class="pad">';
+ if(sc.stage==="pick"){
+  h+='<div class="lbl">PICK A SAMPLE RECEIPT</div><div class="row"><button class="btn f" data-a="sample" data-v="a">Supermarket</button><button class="btn f" data-a="sample" data-v="b">Pharmacy</button><button class="btn f" data-a="sample" data-v="c">Blurry</button></div>'+
+  '<div class="lbl">OR PASTE A BANK SMS</div><label class="fld"><span>SMS text</span><textarea data-f="sms">'+esc(sc.sms)+'</textarea></label><button class="btn p" data-a="readSms">Read SMS</button>'+
+  '<button class="btn" data-a="go" data-v="add">Back</button>';
+ }else if(sc.error){
+  h+='<div class="ph">Could not read this</div><div class="card"><b>We could not read this.</b><span class="mut">Try again or enter it by hand.</span><div class="row"><button class="btn f" data-a="scanReset">Try again</button><button class="btn p f" data-a="go" data-v="add">Enter by hand</button></div></div>';
+ }else{
+  var d=sc.data;
+  h+=(d.src==="photo"?'<div class="ph">Receipt photo (X)</div>':'')+'<div class="mut">Read from your '+(d.src==="photo"?"photo":"SMS")+'. Please check:</div>'+
+  '<label class="fld">Merchant<input data-f="s_m" value="'+esc(d.merchant)+'"></label><label class="fld">Amount (₪)<input data-f="s_a" value="'+esc(d.amount)+'"></label><label class="fld">Date<input type="date" data-f="s_d" value="'+esc(d.date)+'"></label><label class="fld">Category<select data-f="s_c">'+Object.keys(S.budgets).map(function(c){return '<option'+(d.cat===c?" selected":"")+'>'+c+'</option>'}).join("")+'</select></label>'+
+  '<div class="row"><button class="btn p f" data-a="scanConfirm">Confirm and save</button><button class="btn f" data-a="scanReset">Start over</button></div>'+
+  '<div class="mut">Nothing is saved until you confirm. The photo or SMS text is deleted after reading; only merchant, amount and date are kept.</div>';
+ }
+ return h+'</div>';
+}
+function guessCat(m){m=m.toLowerCase();return /cafe|restaurant|pizza|burger/.test(m)?"Eating out":/pharm|clinic|doctor/.test(m)?"Health":/fuel|gas|bus|train|taxi/.test(m)?"Transport":/super|market|grocery/.test(m)?"Groceries":"Other"}
+function ai(){
+ var limitHit=S.plan.tier==="free"&&S.plan.usage>=S.plan.limit;
+ var h='<div class="pad" style="padding-bottom:4px"><div class="row"><span class="tag">AI assistant</span><span class="mut">Reads your data only · cannot change anything</span></div></div><div class="pad" id="chat">';
+ h+=S.chat.map(function(m){return '<div class="bub '+(m.r==="u"?"u":"a")+'">'+m.t+'</div>'}).join("");
+ h+='<div class="chips">'+["Where did my money go last month?","How am I doing on my budget?","Am I on track for my savings goal?","What do I pay every month?","How much do I pay for subscriptions?","Who owes me money?","How much did I spend in March 2019?"].map(function(q){return '<button data-a="ask" data-v="'+esc(q)+'">'+esc(q)+'</button>'}).join("")+'</div>'+
+ '<div class="mut">Free plan: '+S.plan.usage+' of '+S.plan.limit+' AI uses this month.'+(limitHit?' Limit reached.':'')+'</div><button class="btn s" data-a="help">Talk to a person</button></div>';
+ return h;
+}
+function subs(){
+ var all=S.items.filter(function(i){return i.kind==="sub"});
+ var act=all.filter(function(i){return !i.cancelled});
+ var tot=act.reduce(function(a,i){return a+i.amount},0);
+ var h='<div class="pad"><div class="card dark"><span class="mut">Monthly total</span><b style="font-size:28px">'+money(tot)+'</b><span class="mut">'+act.length+' active subscriptions · '+money(tot*12)+' a year</span></div>';
+ h+=all.map(function(i){return '<div class="card"><div class="row"><b class="'+(i.cancelled?"strike":"")+'">'+esc(i.name)+'</b><b class="'+(i.cancelled?"strike":"")+'">'+money(i.amount)+' / month</b></div><div class="row"><span class="mut">'+(i.cancelled?"Marked cancelled":"Next charge: "+fd(i.due))+'</span>'+
+  '<button class="btn s" data-a="subToggle" data-id="'+i.id+'">'+(i.cancelled?"Undo":"Mark cancelled")+'</button></div></div>'}).join("");
+ h+='<button class="btn p" data-a="addSub">Add subscription</button></div>';
+ return h;
+}
+function account(){
+ var p=S.plan,paid=p.tier==="plus";
+ var h='<div class="pad"><label class="fld">Language<select data-f="lang"><option value="en"'+(S.lang==="en"?" selected":"")+'>English</option><option value="he"'+(S.lang==="he"?" selected":"")+'>עברית</option><option value="ar"'+(S.lang==="ar"?" selected":"")+'>العربية</option></select></label>'+
+ (S.lang!=="en"?'<div class="mut">Prototype note: only the tab names and titles are translated; layout switches to right-to-left.</div>':'')+
+ '<div class="card"><div class="row"><b>Plan: '+(paid?"Plus":"Free")+'</b><span class="tag">'+(paid?(p.endsOn?"Ends "+fd(p.endsOn):"Renews "+fd(addMonths(TODAY,p.cycle==="yearly"?12:1))):"AI use "+p.usage+" of "+p.limit)+'</span></div>';
+ if(!paid){
+  h+='<div class="seg"><button data-a="cycle" data-v="monthly" class="'+(p.cycle==="monthly"?"on":"")+'">Monthly</button><button data-a="cycle" data-v="yearly" class="'+(p.cycle==="yearly"?"on":"")+'">Yearly</button></div>'+
+  '<span class="mut">Unlimited manual tracking and reminders stay free. Plus removes the monthly AI limit. Price: [to be set].</span><button class="btn p" data-a="upgradeOpen">Upgrade</button>';
+ }else if(!p.endsOn){
+  h+='<span class="mut">Unlimited AI chat and scanning. Renews automatically. You can cancel any time.</span><button class="btn" data-a="cancelOpen">Cancel plan</button>';
+ }else{h+='<span class="mut">Your plan is cancelled and stays active until '+fd(p.endsOn)+'.</span>'}
+ h+='</div><div class="card"><b>Reminders</b><span class="mut">Default: 2 days before at 09:00 and on the due date. Channels: push, email.</span></div>'+
+ '<div class="card"><label class="chk"><input type="checkbox" data-f="marketing"'+(S.marketing?" checked":"")+'><span>Send me offers by email (off by default, separate from the terms)</span></label></div>'+
+ '<div class="row"><button class="btn f" data-a="exportOpen">Export my data</button><button class="btn f" data-a="deleteOpen">Delete account</button></div></div>';
+ return h;
+}
+function deletedView(){return '<div class="pad" style="padding-top:60px;text-align:center"><b style="font-size:20px">Account deleted</b><span class="mut">Your data was removed (prototype). Nothing is left to show.</span><button class="btn p" data-a="reset">Start over with sample data</button></div>'}
+
+function modal(){
+ var m=S.modal;if(!m)return "";
+ var b="";
+ if(m.t==="snooze")b='<h2>Snooze reminder</h2><div class="mut">The bill stays due. Only the reminder moves.</div><button class="btn" data-a="snooze" data-n="1" data-id="'+m.id+'">Tomorrow</button><button class="btn" data-a="snooze" data-n="3" data-id="'+m.id+'">In 3 days</button><button class="btn" data-a="snooze" data-n="7" data-id="'+m.id+'">Next week</button><button class="btn" data-a="close">Cancel</button>';
+ if(m.t==="upgrade")b='<h2>Upgrade to Plus</h2><div class="mut">'+(S.plan.cycle==="yearly"?"Yearly":"Monthly")+' plan. Price: [to be set]. It renews automatically every '+(S.plan.cycle==="yearly"?"year":"month")+' until you cancel. You can cancel any time in Account, in the same way you signed up. We remind you before each renewal.</div><label class="chk"><input type="checkbox" data-f="agree"'+(S.form.agree?" checked":"")+'><span>I agree to the renewal terms, the Terms of use and the Privacy policy.</span></label><button class="btn p" data-a="upgrade">Start Plus</button><button class="btn" data-a="close">Not now</button>';
+ if(m.t==="cancel")b='<h2>Cancel plan?</h2><div class="mut">You keep Plus until '+fd(addMonths(TODAY,S.plan.cycle==="yearly"?12:1))+'. After that you return to Free.</div><button class="btn p" data-a="cancelPlan">Confirm cancel</button><button class="btn" data-a="close">Keep plan</button>';
+ if(m.t==="export")b='<h2>Export my data</h2><div class="mut">In the real app this downloads a file. Here you can copy it.</div><pre id="exp">'+esc(exportData())+'</pre><button class="btn p" data-a="copyExp">Copy</button><button class="btn" data-a="close">Close</button>';
+ if(m.t==="delete")b='<h2>Delete account?</h2><div class="mut">All your entries are removed.'+(S.plan.tier==="plus"&&!S.plan.endsOn?' Your paid plan will also be cancelled. It ends on '+fd(addMonths(TODAY,S.plan.cycle==="yearly"?12:1))+'.':'')+' This cannot be undone.</div><button class="btn p" data-a="deleteNow">Confirm delete</button><button class="btn" data-a="close">Back</button>';
+ if(m.t==="help")b='<h2>Talk to a person</h2><div class="mut">In the real app this opens a support chat with a human. Here it is a placeholder.</div><button class="btn p" data-a="close">OK</button>';
+ return '<div class="ov" data-a="ovClose"><div class="sheet" role="dialog" aria-modal="true">'+b+'</div></div>';
+}
+function exportData(){
+ return JSON.stringify({items:S.items.map(function(i){return {type:i.kind,name:i.name,amount:i.amount,due:iso(i.due),repeat:i.repeat||"none",paid:!!i.paid}}),expenses:S.expenses.map(function(e){return {date:iso(e.date),merchant:e.merchant,amount:e.amount,category:e.cat}}),budgets:S.budgets,goal:{name:S.goal.name,target:S.goal.target,saved:S.goal.saved,by:iso(S.goal.by)}},null,1)
+}
+var ICON={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',ai:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',plan:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',subs:'<path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',account:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
+
+function render(){
+ var L=I18N[S.lang],ph=document.getElementById("phone");
+ ph.dir=L.dir;
+ var idx=S.screen==="scan"?2:S.screen==="subs"?1:SCREENS.indexOf(S.screen);
+ var title=S.screen==="scan"?(S.scan.stage==="pick"?"Scan or paste":"Check the details"):S.screen==="subs"?"Subscriptions":L.t[idx];
+ var sub={home:"Your money, this month",plan:"Budget and savings goal",add:"What do you want to record?",scan:"Nothing is saved until you confirm",ai:"",subs:"Everything you pay for",account:""}[S.screen];
+ var body=S.deleted?deletedView():({home:home,plan:plan,add:add,scan:scan,ai:ai,subs:subs,account:account})[S.screen]();
+ var keepScroll=document.querySelector(".screen"),sc=keepScroll?keepScroll.scrollTop:0;
+ ph.innerHTML='<div class="hd"><h1>'+title+'</h1>'+(sub?'<p>'+sub+'</p>':'')+'</div><div class="screen" id="scr">'+body+'</div>'+
+  (S.screen==="ai"&&!S.deleted?'<div class="chat-in"><input id="q" aria-label="Ask about your money" placeholder="Ask about your money" autocomplete="off"><button class="btn p" data-a="send">Send</button></div>':'')+
+  '<div class="tabs">'+SCREENS.map(function(s,i){return '<button data-a="go" data-v="'+s+'" class="'+(idx===i?"on":"")+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+ICON[s]+'</svg>'+L.tabs[i]+'</button>'}).join("")+'</div>'+
+  (S.toast?'<div class="toast" role="status">'+esc(S.toast)+'</div>':'')+modal();
+ var scr=document.getElementById("scr");if(scr)scr.scrollTop=S.screen==="ai"?scr.scrollHeight:sc;
+ var g=GUIDE[S.screen];
+ document.getElementById("guide").innerHTML='<div class="k">THIS SCREEN</div><h2>'+esc(title)+'</h2><div><div class="k">GOAL</div>'+g.goal+'</div><div><div class="k">WHY (IN A PICTURE)</div>'+g.why+'</div><div><div class="k">ONE FLOW</div><ol class="steps">'+g.steps.map(function(t,i){return '<li class="'+(i+1<S.step?"done":i+1===S.step?"now":"")+'"><b>'+(i+1)+'</b>'+t+'</li>'}).join("")+'</ol></div><button class="btn s" data-a="reset">Reset sample data</button><div class="mut">Everything here works with sample data. Nothing is saved after you close the page.</div>';
+}
+
+/* ---------- AI ---------- */
+function answer(q){
+ var l=q.toLowerCase();
+ var months=["january","february","march","april","may","june","july","august","september","october","november","december"];
+ var lm=curMonth(-1),tm=curMonth(0);
+ var yr=l.match(/\b(19|20)\d\d\b/);
+ var named=months.filter(function(m){return l.indexOf(m)>-1})[0];
+ var okNamed=named&&(months.indexOf(named)===lm.getMonth()||months.indexOf(named)===tm.getMonth());
+ if((yr&&+yr[0]!==TODAY.getFullYear())||(named&&!okNamed)||/last year/.test(l)){
+  return "I have no recorded data for that period, so I cannot answer. I only have "+months[lm.getMonth()]+" and "+months[tm.getMonth()]+".";
+ }
+ if(/add|delete|remove|create|change|edit/.test(l))return "I can only read your data. To add or change something, use the Add tab.";
+ if(/budget/.test(l)){var by=spentBy(tm),parts=Object.keys(S.budgets).map(function(c){var sp=by[c]||0,b=S.budgets[c];return c+": "+Math.round(sp/b*100)+"% ("+money(sp)+" of "+money(b)+")"});return "<b>This month so far</b><br>"+parts.join("<br>")}
+ if(/goal|on track|sav(e|ing)/.test(l)){var g=S.goal,n=goalNeed();return esc(g.name)+": "+money(g.saved)+" of "+money(g.target)+" ("+Math.round(g.saved/g.target*100)+"%). To reach it by "+fdl(g.by)+" you need about "+money(n.per)+" a month. This is general information based on your own numbers."}
+ if(/owe|owed/.test(l)){var o=active("owed");return o.length?"People who owe you: "+o.map(function(i){return esc(i.name)+" "+money(i.amount)+" (due "+fd(i.due)+")"}).join(", ")+".":"Nobody owes you money right now."}
+ if(/subscri/.test(l)){var s=S.items.filter(function(i){return i.kind==="sub"&&!i.cancelled});return "You pay "+money(s.reduce(function(a,i){return a+i.amount},0))+" a month for "+s.length+" subscriptions: "+s.map(function(i){return esc(i.name)}).join(", ")+"."}
+ if(/every month|recurring|monthly/.test(l)){var r=S.items.filter(function(i){return !i.paid&&!i.cancelled&&i.repeat==="monthly"});return "Monthly payments: "+r.map(function(i){return esc(i.name)+" "+money(i.amount)}).join(", ")+". Total "+money(r.reduce(function(a,i){return a+i.amount},0))+"."}
+ if(/where|spen|went|money go|expens/.test(l)){
+  var m=/this month/.test(l)?tm:lm,ex=S.expenses.filter(function(e){return inMonth(e,m)});
+  if(!ex.length)return "I have no recorded expenses for that period, so I cannot answer.";
+  var by={};ex.forEach(function(e){by[e.cat]=(by[e.cat]||0)+e.amount});
+  var arr=Object.keys(by).sort(function(a,b){return by[b]-by[a]});
+  var last=new Date(m.getFullYear(),m.getMonth()+1,0);
+  return "<b>Period: "+fdl(m)+" to "+fdl(last)+"</b><br>"+arr.map(function(k,i){return (i+1)+". "+k+" "+money(by[k])}).join("<br>")+"<br>Total "+money(ex.reduce(function(a,e){return a+e.amount},0))+".";
+ }
+ return "I can answer about where your money went, what you pay every month, your subscriptions and who owes you. Try one of the suggestions.";
+}
+function ask(q){
+ q=q.trim();if(!q)return;
+ S.chat.push({r:"u",t:esc(q)});
+ if(S.plan.tier==="free"&&S.plan.usage>=S.plan.limit){S.chat.push({r:"a",t:"You used all "+S.plan.limit+" free AI uses this month. Upgrade to Plus in Account to keep asking."});}
+ else{S.plan.usage++;S.chat.push({r:"a",t:answer(q)});}
+ S.step=2;render();
+}
+
+/* ---------- actions ---------- */
+var A={
+ go:function(e){var v=e.dataset.v;if(SCREENS.indexOf(v)>-1||v==="subs"){if(v==="add"){S.form={};}go(v)}},
+ budget:function(e){var c=e.dataset.cat;S.budgets[c]=Math.max(0,S.budgets[c]+(+e.dataset.d));S.step=2;render()},
+ goalMove:function(e){var n=+e.dataset.n;S.goal.saved=Math.min(S.goal.target,S.goal.saved+n);S.goal.moved+=n;S.step=3;toast("Moved "+money(n)+" to "+S.goal.name+".")},
+ paid:function(e){
+  var it=S.items.filter(function(i){return i.id==e.dataset.id})[0];if(!it)return;
+  it.paid=true;var nx=nextDue(it.due,it.repeat||"none");
+  if(nx){S.items.push({id:nid(),kind:it.kind,name:it.name,amount:it.amount,due:nx,repeat:it.repeat,paid:false,snooze:null});toast("Marked paid. Next "+it.name+" is due "+fd(nx)+".")}
+  else toast(it.kind==="owed"?"Marked received.":"Marked paid. No more reminders for it.");
+  S.step=3;render();
+ },
+ snoozeOpen:function(e){S.modal={t:"snooze",id:e.dataset.id};S.step=2;render()},
+ snooze:function(e){var it=S.items.filter(function(i){return i.id==e.dataset.id})[0];it.snooze=addDays(TODAY,+e.dataset.n);S.modal=null;S.step=3;toast("Reminder returns on "+fd(it.snooze)+".")},
+ close:function(){S.modal=null;render()},
+ ovClose:function(e,ev){if(ev.target===e){S.modal=null;render()}},
+ type:function(e){S.addType=e.dataset.v;render()},
+ save:function(){
+  var f=S.form,t=S.addType,amt=parseFloat(String(f.amount||"").replace(/,/g,""));
+  if(!f.name||!f.name.trim()||!(amt>0)){toast("Please enter a name and an amount above 0.");return}
+  var d=f.date?new Date(f.date+"T00:00:00"):addDays(TODAY,3);
+  if(t==="expense")S.expenses.push({id:nid(),date:d,merchant:f.name.trim(),amount:amt,cat:f.cat||"Other"});
+  else if(t==="income")S.income+=amt;
+  else S.items.push({id:nid(),kind:t,name:f.name.trim(),amount:amt,due:d,repeat:f.repeat||(t==="sub"?"monthly":"none"),paid:false,snooze:null,cancelled:false});
+  S.form={};S.step=3;
+  var back=(t==="sub")?"subs":"home";S.screen=back;S.step=1;toast("Saved: "+f.name.trim()+" "+money(amt)+".");
+ },
+ scanOpen:function(e){S.scan={stage:"pick",data:null,error:false,sms:S.scan.sms};S.screen="scan";S.step=1;render();},
+ sample:function(e){
+  var v=e.dataset.v;S.step=2;
+  if(v==="c"){S.scan={stage:"check",error:true,data:null,sms:S.scan.sms}}
+  else S.scan={stage:"check",error:false,sms:S.scan.sms,data:v==="a"?{src:"photo",merchant:"Supermarket",amount:"187.40",date:iso(addDays(TODAY,-1)),cat:"Groceries"}:{src:"photo",merchant:"Pharmacy",amount:"64.90",date:iso(TODAY),cat:"Health"}};
+  render();
+ },
+ readSms:function(){
+  var t=S.scan.sms||"",a=t.match(/₪\s?([\d.,]+)/),m=t.match(/\bat\s+([A-Za-z0-9 ]+?)(?:\s+on\b|$)/i),d=t.match(/(\d{1,2})\/(\d{1,2})/);
+  S.step=2;
+  if(!a||!m){S.scan={stage:"check",error:true,data:null,sms:t};render();return}
+  var dt=d?new Date(TODAY.getFullYear(),+d[2]-1,+d[1]):TODAY;
+  S.scan={stage:"check",error:false,sms:t,data:{src:"sms",merchant:m[1].trim(),amount:a[1].replace(/,/g,""),date:iso(dt),cat:guessCat(m[1])}};render();
+ },
+ scanReset:function(){S.scan={stage:"pick",data:null,error:false,sms:S.scan.sms};S.step=1;render()},
+ scanConfirm:function(){
+  var d=S.scan.data,amt=parseFloat(d.amount);
+  if(!d.merchant||!(amt>0)){toast("Please check the merchant and the amount.");return}
+  if(S.plan.tier==="free"&&S.plan.usage>=S.plan.limit){toast("Free AI limit reached. Upgrade in Account, or enter by hand.");return}
+  S.plan.usage++;
+  S.expenses.push({id:nid(),date:new Date(d.date+"T00:00:00"),merchant:d.merchant,amount:amt,cat:d.cat||"Other"});
+  S.scan={stage:"pick",data:null,error:false,sms:S.scan.sms};S.screen="home";S.step=1;toast("Saved expense: "+d.merchant+" "+money(amt)+".");
+ },
+ ask:function(e){ask(e.dataset.v)},
+ send:function(){var q=document.getElementById("q");if(q){var v=q.value;q.value="";ask(v)}},
+ help:function(){S.modal={t:"help"};S.step=3;render()},
+ subToggle:function(e){var it=S.items.filter(function(i){return i.id==e.dataset.id})[0];it.cancelled=!it.cancelled;if(it.cancelled){S.step=3;toast(it.name+" marked cancelled. Remember to cancel it with the provider.")}else{S.step=2;render()}},
+ addSub:function(){S.addType="sub";S.form={};S.screen="add";S.step=1;render()},
+ cycle:function(e){S.plan.cycle=e.dataset.v;render()},
+ upgradeOpen:function(){S.form.agree=false;S.modal={t:"upgrade"};S.step=2;render()},
+ upgrade:function(){if(!S.form.agree){toast("Please tick the box to agree to the renewal terms.");return}S.plan.tier="plus";S.plan.endsOn=null;S.modal=null;S.step=3;toast("Plus started. We will remind you before it renews.")},
+ cancelOpen:function(){S.modal={t:"cancel"};S.step=2;render()},
+ cancelPlan:function(){S.plan.endsOn=addMonths(TODAY,S.plan.cycle==="yearly"?12:1);S.modal=null;S.step=3;toast("Plan cancelled. It stays active until "+fd(S.plan.endsOn)+".")},
+ exportOpen:function(){S.modal={t:"export"};S.step=3;render()},
+ copyExp:function(){try{navigator.clipboard.writeText(exportData()).then(function(){toast("Copied.")},function(){toast("Copy not allowed here. Select the text and copy it.")})}catch(x){toast("Copy not allowed here. Select the text and copy it.")}},
+ deleteOpen:function(){S.modal={t:"delete"};S.step=2;render()},
+ deleteNow:function(){S.items=[];S.expenses=[];S.income=0;S.goal.saved=0;S.goal.moved=0;S.plan={tier:"free",cycle:"monthly",endsOn:null,usage:0,limit:20};S.deleted=true;S.modal=null;S.step=3;render()},
+ reset:function(){var l=S.lang;seed();S.lang=l;render()}
+};
+document.addEventListener("click",function(ev){
+ var el=ev.target.closest("[data-a]");if(!el)return;
+ var fn=A[el.dataset.a];if(fn)fn(el,ev);
+});
+document.addEventListener("input",function(ev){
+ var f=ev.target.dataset&&ev.target.dataset.f;if(!f)return;
+ if(f==="sms")S.scan.sms=ev.target.value;
+ else if(f==="s_m")S.scan.data.merchant=ev.target.value;
+ else if(f==="s_a")S.scan.data.amount=ev.target.value;
+ else if(f==="s_d")S.scan.data.date=ev.target.value;
+ else if(f!=="lang"&&f!=="marketing"&&f!=="agree")S.form[f]=ev.target.value;
+});
+document.addEventListener("change",function(ev){
+ var f=ev.target.dataset&&ev.target.dataset.f;if(!f)return;
+ if(f==="lang"){S.lang=ev.target.value;render()}
+ else if(f==="marketing"){S.marketing=ev.target.checked;toast(S.marketing?"Offers on.":"Offers off.")}
+ else if(f==="agree"){S.form.agree=ev.target.checked}
+ else if(f==="s_c"){S.scan.data.cat=ev.target.value}
+ else if(f==="repeat"||f==="remind"||f==="date"||f==="cat")S.form[f]=ev.target.value;
+});
+document.addEventListener("keydown",function(ev){if(ev.key==="Enter"&&ev.target.id==="q"){ev.preventDefault();A.send()}});
+render();
+})();
+</script>
+</body>
+</html>
