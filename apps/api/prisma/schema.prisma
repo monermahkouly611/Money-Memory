@@ -8,12 +8,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Locale { he ar en }
-enum ConsentType { terms privacy }
-enum ObligationKind { bill i_owe owed_to_me }
-enum Repeat { none weekly monthly yearly }
-enum TransactionType { expense income }
-enum Category { groceries transport eating_out health housing fun other }
+enum Locale {
+  he
+  ar
+  en
+}
+enum ConsentType {
+  terms
+  privacy
+}
+enum ObligationKind {
+  bill
+  i_owe
+  owed_to_me
+}
+enum Repeat {
+  none
+  weekly
+  monthly
+  yearly
+}
+enum TransactionType {
+  expense
+  income
+}
+enum Category {
+  groceries
+  transport
+  eating_out
+  health
+  housing
+  fun
+  other
+}
 
 model User {
   id             String        @id @default(uuid())
