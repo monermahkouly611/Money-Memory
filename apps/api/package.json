@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@money-memory/shared": "workspace:*",
@@ -26,5 +27,8 @@
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

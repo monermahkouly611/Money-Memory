@@ -16,7 +16,7 @@ services:
     branch: develop
     autoDeploy: true
     buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter api... build
-    startCommand: pnpm --filter api start
+    startCommand: pnpm --filter api migrate:deploy && pnpm --filter api start
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
